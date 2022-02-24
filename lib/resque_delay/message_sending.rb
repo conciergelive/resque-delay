@@ -24,6 +24,11 @@ module ResqueDelay
       PerformableMethod.new(*args).perform
     end
 
+    # For Sidekiq compatibility.
+    def perform(args)
+      PerformableMethod.new(*args).perform
+    end
+
     private
       def delay?
         delay.to_i > 0
