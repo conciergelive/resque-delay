@@ -3,6 +3,9 @@ require 'resque_delay/message_sending'
 
 Object.send(:include, ResqueDelay::MessageSending)
 
+# Copied/adapted from NewRelic gem v7.0.0. We can't use the built-in Resque
+# instrumentation because it reports every single delay proxied job as
+# "DelayProxy#perform" which is not helpful.
 if defined?(::NewRelic)
   ::NewRelic::Agent.logger.info 'Installing Resque instrumentation'
   if NewRelic::Agent.config[:'resque.use_ruby_dns'] && NewRelic::Agent.config[:dispatcher] == :resque
