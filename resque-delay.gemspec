@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
   s.homepage          = "http://github.com/rykov/resque-delay"
   s.email             = "mrykov@gmail"
   s.authors           = [ "Michael Rykov" ]
-  s.has_rdoc          = false
 
   s.files             = %w( README.md Rakefile LICENSE )
   s.files            += Dir.glob("lib/**/*")
