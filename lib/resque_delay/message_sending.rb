@@ -1,6 +1,7 @@
-require 'active_support/basic_object'
+require 'active_support/proxy_object'
+
 module ResqueDelay
-  class DelayProxy < ActiveSupport::BasicObject
+  class DelayProxy < ActiveSupport::ProxyObject
     if defined?(::NewRelic)
       extend ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
@@ -30,24 +31,33 @@ module ResqueDelay
     def initialize(target, options)
       @target = target
       @options = options
-      if @options[:in].not_nil? && !@options[:in].kind_of?(::Fixnum)
+      if !@options[:in].nil? && !@options[:in].kind_of?(::Fixnum)
         raise ::ArgumentError.new("Delayed settings must be a Fixnum! not a #{@options[:in].class.name}") 
       end
     end
 
     def method_missing(method, *args)
       queue = @options[:to] || :default
-      performable_method = PerformableMethod.create(@target, method, args)
+      run_in = @options[:in] || 0
+      performable_method = PerformableMethod.create(@target, method, args, queue, run_in)
+      ::Resque::Job.new(queue, performable_method)
       if delay?
         ::Resque.enqueue_in_with_queue(queue, delay, DelayProxy, performable_method)
       else
         ::Resque::Job.create(queue, DelayProxy, performable_method)
       end
+      performable_method
     end
 
-    # Called asynchrously by Resque
+    # Called asynchronously by Resque
     def self.perform(args)
-      pm = PerformableMethod.new(*args)
+      pm =
+        if args.respond_to?(:[])
+          PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"])
+        else
+          PerformableMethod.new(*args)
+        end
+
       if defined?(::NewRelic)
         with_tracing pm do
           pm.perform
@@ -58,13 +68,14 @@ module ResqueDelay
     end
 
     private
-      def delay?
-        delay.to_i > 0
-      end
 
-      def delay
-        @delay ||= @options[:in]
-      end
+    def delay?
+      delay.to_i > 0
+    end
+
+    def delay
+      @delay ||= @options[:in]
+    end
   end
 
   module MessageSending
