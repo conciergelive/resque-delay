@@ -1,7 +1,7 @@
-require 'active_support/proxy_object'
+require 'active_support/basic_object'
 
 module ResqueDelay
-  class DelayProxy < ActiveSupport::ProxyObject
+  class DelayProxy < ActiveSupport::BasicObject
     if defined?(::NewRelic)
       extend ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
