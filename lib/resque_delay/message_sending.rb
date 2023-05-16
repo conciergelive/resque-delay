@@ -1,7 +1,23 @@
-require 'active_support/basic_object'
-
 module ResqueDelay
-  class DelayProxy < ActiveSupport::BasicObject
+  # This check will work for Rails 4.2 through 7. BasicObject was deprecated in
+  # Rails 4.0 and removed in 4.1. The replacement is called ProxyObject and works
+  # in 4.1 through 7. ActiveSupport added #version in 4.2 so we have to do some
+  # awkward version checking here.
+  proxy_superclass =
+    if ActiveSupport.respond_to?(:version)
+      require 'active_support/proxy_object'
+      ActiveSupport::ProxyObject
+    else
+      if ActiveSupport::VERSION::MAJOR == 4 && ActiveSupport::VERSION::MINOR == 1
+        require 'active_support/proxy_object'
+        ActiveSupport::ProxyObject
+      else
+        require 'active_support/basic_object'
+        ActiveSupport::BasicObject
+      end
+    end
+
+  class DelayProxy < proxy_superclass
     if defined?(::NewRelic)
       extend ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
@@ -31,8 +47,9 @@ module ResqueDelay
     def initialize(target, options)
       @target = target
       @options = options
-      if !@options[:in].nil? && !@options[:in].kind_of?(::Fixnum)
-        raise ::ArgumentError.new("Delayed settings must be a Fixnum! not a #{@options[:in].class.name}") 
+      check_class = defined?(::Integer) ? ::Integer : ::Fixnum
+      if !@options[:in].nil? && !@options[:in].kind_of?(check_class)
+        raise ::ArgumentError.new("Delayed settings must be a #{check_class}! not a #{@options[:in].class.name}")
       end
     end
 

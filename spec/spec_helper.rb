@@ -4,6 +4,7 @@ $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 require 'resque'
 require 'resque-scheduler'
 require 'coveralls'
+require 'pry'
 Coveralls.wear!
 SimpleCov.minimum_coverage 100
 SimpleCov.refuse_coverage_drop

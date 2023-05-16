@@ -10,7 +10,8 @@ group :development, :test do
   gem 'resque-scheduler'
   gem 'coveralls'
   gem 'activerecord'
-  gem 'activesupport'
+  gem 'activesupport', '~> 4.0'
   gem 'data_mapper'
   gem 'mongoid'
+  gem 'pry'
 end
