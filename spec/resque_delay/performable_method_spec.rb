@@ -40,7 +40,7 @@ describe 'performable_method' do
   
   let(:klass) { 3.class }
   
-  let(:klass_key) { 'CLASS:Fixnum' }
+  let(:klass_key) { 'CLASS:Integer' }
   
   let(:dm) {
     dm = instance_double("TheDataMapper")
@@ -107,7 +107,7 @@ describe 'performable_method' do
     end
     it 'prints Classes' do
       pm = ResqueDelay::PerformableMethod.new(klass, :to_s, [], nil, nil)
-      expect(pm.display_name).to eq('Fixnum.to_s')
+      expect(pm.display_name).to eq('Integer.to_s')
     end
     it 'prints Unknowns' do
       pm = ResqueDelay::PerformableMethod.new("I'm not exptected", :to_s, [], nil, nil)

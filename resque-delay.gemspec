@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency    "resque", ">= 1.25"
   s.add_dependency    "resque-scheduler", ">= 4.0.0"
-  s.add_dependency    "activesupport", "< 4"
+  s.add_dependency    "activesupport", "< 5"
   s.add_development_dependency "guard"
   s.add_development_dependency "guard-rspec"
   s.add_development_dependency "coveralls"
