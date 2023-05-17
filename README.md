@@ -1,21 +1,26 @@
-resque-delay
----------------
+# resque-delay
 
-[![Gem Version](https://fury-badge.herokuapp.com/rb/resque-delay.png)](http://badge.fury.io/rb/resque-delay)
-[![Coverage Status](https://coveralls.io/repos/gabriprat/resque-delay/badge.svg)](https://coveralls.io/r/gabriprat/resque-delay)
+Allows you to call .send_later or .delay.method on objects à la DelayedJob
 
-Requires the resque gem.
+    # Instead of calling your mailer inline
+    MyMailer.deliver_notice
+    
+    # send it to resque:
+    MyMailer.delay.deliver_notice
 
-Allows to call .send_later or .delay.method on objects à la DelayedJob
-
-
-Installation
-============
+# Installation
 
     $ gem install resque-delay
 
+Or add it to your Gemfile and `bundle`.
 
-Author
-=====
+# Version Notes
+
+Rails versions 2.3, 3.x, and 4.x are currently supported.
+
+- Rails 2.3 - use `rails-2` branch
+- Rails 3.x/4.x - use `main` branch
+
+# Author
 
 Michael Rykov :: mrykov@gmail.com
