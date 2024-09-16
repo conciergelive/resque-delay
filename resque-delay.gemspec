@@ -14,10 +14,19 @@ Gem::Specification.new do |s|
 
   s.add_dependency    "resque", ">= 1.25"
   s.add_dependency    "resque-scheduler", ">= 4.0.0"
-  s.add_dependency    "activesupport", "< 5"
-  s.add_development_dependency "guard"
-  s.add_development_dependency "guard-rspec"
+  s.add_dependency    "activesupport", "< 6"
+
   s.add_development_dependency "coveralls"
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec-nc'
+  s.add_development_dependency 'rspec-mocks'
+  s.add_development_dependency 'resque'
+  s.add_development_dependency 'resque-scheduler'
+  s.add_development_dependency 'activerecord', '~> 5.2'
+  s.add_development_dependency 'activesupport', '~> 5.2'
+  s.add_development_dependency 'data_mapper'
+  s.add_development_dependency 'mongoid'
+  s.add_development_dependency 'pry'
 
   s.description = <<DESCRIPTION
 Enable send_later support for Resque

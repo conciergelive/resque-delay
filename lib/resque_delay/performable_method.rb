@@ -1,21 +1,26 @@
+# frozen_string_literal: true
+
 module ResqueDelay
-  class PerformableMethod < Struct.new(:object, :method, :args, :queue, :run_in)
+  class PerformableMethod
+    attr_accessor :object, :method, :args, :queue, :run_in, :kwargs
+
     CLASS_STRING_FORMAT = /^CLASS\:([A-Z][\w\:]+)$/
     AR_STRING_FORMAT    = /^AR\:([A-Z][\w\:]+)\:(\d+)$/
     DM_STRING_FORMAT    = /^DM\:((?:[A-Z][a-zA-z]+)(?:\:\:[A-Z][a-zA-z]+)*)\:([\d\:]+)$/
     MG_STRING_FORMAT    = /^MG\:([A-Z][\w\:]+)\:(\w+)$/
-    
-    def self.create(object, method, args, queue, run_in)
+
+    def self.create(object, method, args, queue, run_in, **kwargs)
       raise NoMethodError, "undefined method `#{method}' for #{object.inspect}" unless object.respond_to?(method, true)
-      self.new(object, method, args, queue, run_in)
+      new(object, method, args, queue, run_in, **kwargs)
     end
 
-    def initialize(object, method, args, queue, run_in)
+    def initialize(object, method, args, queue, run_in, **kwargs)
       self.object = dump(object)
       self.args   = args.map { |a| dump(a) }
       self.method = method.to_sym
       self.queue = queue
       self.run_in = run_in
+      self.kwargs = kwargs
     end
 
     def display_name
@@ -29,7 +34,11 @@ module ResqueDelay
     end
 
     def perform
-      load(object).send(method, *args.map { |a| load(a) })
+      load_serialized_object(object).send(
+        method,
+        *args.map { |a| load_serialized_object(a) },
+        **(kwargs&.transform_values { |v| load_serialized_object(v) }&.transform_keys(&:to_sym))
+      )
     rescue => e
       if defined?(ActiveRecord) && e.kind_of?(ActiveRecord::RecordNotFound)
         true
@@ -40,7 +49,7 @@ module ResqueDelay
 
     private
 
-    def load(arg)      
+    def load_serialized_object(arg)
       case arg
       when CLASS_STRING_FORMAT then $1.constantize
       when AR_STRING_FORMAT    then $1.constantize.find($2)
