@@ -70,7 +70,11 @@ module ResqueDelay
     def self.perform(args)
       pm =
         if args.respond_to?(:[])
-          PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"], **args["kwargs"])
+          if args.key? "kwargs"
+            PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"], **args["kwargs"])
+          else
+            PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"])
+          end
         else
           PerformableMethod.new(*args)
         end

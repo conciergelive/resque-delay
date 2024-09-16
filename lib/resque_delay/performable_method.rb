@@ -34,11 +34,18 @@ module ResqueDelay
     end
 
     def perform
-      load_serialized_object(object).send(
-        method,
-        *args.map { |a| load_serialized_object(a) },
-        **(kwargs&.transform_values { |v| load_serialized_object(v) }&.transform_keys(&:to_sym))
-      )
+      if kwargs.blank?
+        load_serialized_object(object).send(
+          method,
+          *args.map { |a| load_serialized_object(a) }
+        )
+      else
+        load_serialized_object(object).send(
+          method,
+          *args.map { |a| load_serialized_object(a) },
+          **(kwargs&.transform_values { |v| load_serialized_object(v) }&.transform_keys(&:to_sym))
+        )
+      end
     rescue => e
       if defined?(ActiveRecord) && e.kind_of?(ActiveRecord::RecordNotFound)
         true

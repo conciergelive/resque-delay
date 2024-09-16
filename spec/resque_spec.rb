@@ -75,6 +75,11 @@ describe "resque" do
       ResqueDelay::DelayProxy.perform({ 'object' => FairyTale, 'method' => :ending, 'args' => [], 'kwargs' => { which: :sad }})
     end
 
+    it 'handles no keyword arguments sent in' do
+      expect(FairyTale).to receive(:ending).with(no_args)
+      ResqueDelay::DelayProxy.perform({ 'object' => FairyTale, 'method' => :ending, 'args' => [] })
+    end
+
     it 'sends perform when argument does NOT respond to :[]' do
       obj = "hello"
       args = [obj, :to_s, [], nil, nil]
