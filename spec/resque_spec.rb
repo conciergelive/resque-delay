@@ -39,7 +39,7 @@ describe "resque" do
         expect(job.class).to eq(ResqueDelay::PerformableMethod)
         expect(job.method).to eq(:ending)
         expect(job.args).to eq([])
-        expect(job.kwargs).to eq({ which: :sad })
+        expect(job.kwargs).to eq({ which: "SYMBOL:sad" })
       end.to change { Resque.info[:pending] }.by(1)
     end
 
@@ -63,7 +63,7 @@ describe "resque" do
     end
   end
 
-  describe 'self.perform' do
+  describe '.perform' do
     it 'sends perform when argument responds to :[]' do
       obj = "hello"
       expect(obj).to receive(:to_s)
