@@ -56,7 +56,7 @@ module ResqueDelay
     def method_missing(method, *args, **kwargs)
       queue = @options[:to] || :default
       run_in = @options[:in] || 0
-      performable_method = PerformableMethod.create(@target, method, args, queue, run_in, kwargs)
+      performable_method = PerformableMethod.create(@target, method, args, queue, run_in, **kwargs)
       if delay?
         ::Resque.enqueue_in_with_queue(queue, delay, DelayProxy, performable_method)
       else
