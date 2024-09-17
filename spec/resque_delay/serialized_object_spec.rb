@@ -4,6 +4,8 @@ describe ResqueDelay::SerializedObject do
   let(:class_key) { 'CLASS:Integer' }
   let(:sym_key) { 'SYMBOL:dragon' }
   let(:str_key) { 'thing' }
+  let(:date_key) { "OBJ:#{Base64.strict_encode64(Marshal.dump(Date.today))}" }
+  let(:obj_key) { "OBJ:BAhJdToJVGltZQ1xIh+AZ2diIAc6C29mZnNldGn+sLk6CXpvbmVJIghDRFQG\nOgZFRg==\n" }
   
   describe '.serialize' do
     it 'works for symbols' do
@@ -16,6 +18,16 @@ describe ResqueDelay::SerializedObject do
 
     it 'works for strings' do
       expect(described_class.serialize('thing')).to eq(str_key)
+    end
+
+    it 'works for dates' do
+      expect(described_class.serialize(Date.today)).to eq(date_key)
+    end
+
+    it 'works for objects' do
+      d = 2.days.from_now
+      str = described_class.serialize(d)
+      expect(described_class.deserialize(str)).to eq(d)
     end
 
     it "dumps complext symbols" do

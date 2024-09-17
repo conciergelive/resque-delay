@@ -9,6 +9,11 @@ describe "resque" do
       def self.ending(which: :happy); end
     end
 
+    def enqueued_details
+      j = Resque.redis.lrange('queue:default', 0, 0).first
+      Resque.decode(j)
+    end
+
     before do
       Resque.queues.each{|q| Resque.redis.del "queue:#{q}" } #Empty all queues
       Resque.remove_delayed_selection do true end #Remove all delayed jobs
@@ -43,6 +48,15 @@ describe "resque" do
       end.to change { Resque.info[:pending] }.by(1)
     end
 
+    it 'serializes complex kwargs' do
+      n = 2.days.from_now
+      job = FairyTale.delay.ending(which: n)
+      deets = enqueued_details
+      pm = ResqueDelay::DelayProxy.performable_from_resque_args(deets['args'].first)
+      expect(pm.kwargs).to eq({ "which" => ResqueDelay::SerializedObject.serialize(n) })
+      expect(pm.loaded_kwargs).to eq({ which: n })
+    end
+
     it 'sets default queue name' do
       job = FairyTale.delay(to: 'abbazabba').to_s
       expect(job.queue).to eq('abbazabba')
@@ -66,13 +80,18 @@ describe "resque" do
   describe '.perform' do
     it 'sends perform when argument responds to :[]' do
       obj = "hello"
-      expect(obj).to receive(:to_s)
+      expect_any_instance_of(String).to receive(:to_s)
       ResqueDelay::DelayProxy.perform({ 'object' => obj, 'method' => :to_s, 'args' => [], 'kwargs' => {}})
     end
 
     it 'sends keyword arguments' do
       expect(FairyTale).to receive(:ending).with(which: :sad)
       ResqueDelay::DelayProxy.perform({ 'object' => FairyTale, 'method' => :ending, 'args' => [], 'kwargs' => { which: :sad }})
+    end
+
+    it 'sends serializable keyword arguments' do
+      expect(FairyTale).to receive(:ending).with(which: Date.today)
+      ResqueDelay::DelayProxy.perform({ 'object' => FairyTale, 'method' => :ending, 'args' => [], 'kwargs' => { which: Date.today }})
     end
 
     it 'handles no keyword arguments sent in' do
@@ -83,7 +102,7 @@ describe "resque" do
     it 'sends perform when argument does NOT respond to :[]' do
       obj = "hello"
       args = [obj, :to_s, [], nil, nil]
-      expect(obj).to receive(:to_s)
+      expect_any_instance_of(String).to receive(:to_s)
       expect(args).to receive('respond_to?').with(:[]).and_return(false)
       ResqueDelay::DelayProxy.perform(args)
     end

@@ -57,7 +57,6 @@ module ResqueDelay
       queue = @options[:to] || :default
       run_in = @options[:in] || 0
       performable_method = PerformableMethod.create(@target, method, args, queue, run_in, kwargs)
-      #::Resque::Job.new(queue, performable_method)
       if delay?
         ::Resque.enqueue_in_with_queue(queue, delay, DelayProxy, performable_method)
       else
@@ -68,16 +67,7 @@ module ResqueDelay
 
     # Called asynchronously by Resque
     def self.perform(args)
-      pm =
-        if args.respond_to?(:[])
-          if args.key? "kwargs"
-            PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"], **args["kwargs"])
-          else
-            PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"])
-          end
-        else
-          PerformableMethod.new(*args)
-        end
+      pm = performable_from_resque_args(args)
 
       if defined?(::NewRelic)
         with_tracing pm do
@@ -85,6 +75,18 @@ module ResqueDelay
         end
       else
         pm.perform
+      end
+    end
+
+    def self.performable_from_resque_args(args)
+      if args.respond_to?(:[])
+        if args.key? "kwargs"
+          PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"], **args["kwargs"])
+        else
+          PerformableMethod.new(args["object"], args["method"], args["args"], args["queue"], args["run_in"])
+        end
+      else
+        PerformableMethod.new(*args)
       end
     end
 

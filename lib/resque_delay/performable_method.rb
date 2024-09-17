@@ -24,16 +24,9 @@ module ResqueDelay
 
     def perform
       if kwargs.blank?
-        load_from_string(object).send(
-          method,
-          *args.map { |a| load_from_string(a) }
-        )
+        load_from_string(object).send(method, *loaded_args)
       else
-        load_from_string(object).send(
-          method,
-          *args.map { |a| load_from_string(a) },
-          **(kwargs&.transform_values { |v| load_from_string(v) }&.transform_keys(&:to_sym))
-        )
+        load_from_string(object).send(method, *loaded_args, **loaded_kwargs)
       end
     rescue => e
       if defined?(ActiveRecord) && e.kind_of?(ActiveRecord::RecordNotFound)
@@ -41,6 +34,14 @@ module ResqueDelay
       else
         raise
       end
+    end
+
+    def loaded_args
+      args.map { |a| load_from_string(a) }
+    end
+
+    def loaded_kwargs
+      kwargs&.transform_values { |v| load_from_string(v) }&.transform_keys(&:to_sym)
     end
 
     private
