@@ -70,7 +70,7 @@ module ResqueDelay
         "MG:#{obj.class}:#{obj.id}"
       elsif obj.is_a?(Symbol)
         "SYMBOL:#{obj}"
-      elsif obj.is_a? String
+      elsif obj.is_a?(String) || obj.is_a?(Numeric)
         obj
       else
         "OBJ:#{Base64.strict_encode64(Marshal.dump(obj))}"

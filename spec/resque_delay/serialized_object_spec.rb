@@ -20,6 +20,10 @@ describe ResqueDelay::SerializedObject do
       expect(described_class.serialize('thing')).to eq(str_key)
     end
 
+    it 'works for numbers' do
+      expect(described_class.serialize(123)).to eq(123)
+    end
+
     it 'works for dates' do
       expect(described_class.serialize(Date.today)).to eq(date_key)
     end
@@ -64,6 +68,10 @@ describe ResqueDelay::SerializedObject do
 
     it 'loads other' do
       expect(described_class.deserialize(str_key)).to eq('thing')
+    end
+
+    it 'loads numbers' do
+      expect(described_class.deserialize(123)).to eq(123)
     end
   end
 end

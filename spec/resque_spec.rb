@@ -57,6 +57,15 @@ describe "resque" do
       expect(pm.loaded_kwargs).to eq({ which: n })
     end
 
+    it 'serializes numbers' do
+      n = 2
+      job = FairyTale.delay.ending(which: n)
+      deets = enqueued_details
+      pm = ResqueDelay::DelayProxy.performable_from_resque_args(deets['args'].first)
+      expect(pm.kwargs).to eq({ "which" => n })
+      expect(pm.loaded_kwargs).to eq({ which: n })
+    end
+
     it 'sets default queue name' do
       job = FairyTale.delay(to: 'abbazabba').to_s
       expect(job.queue).to eq('abbazabba')
