@@ -1,6 +1,7 @@
 require 'bundler/setup'
 Bundler.setup
 
+require 'resque-retry'
 require 'resque-delay'
 
 require 'coveralls'

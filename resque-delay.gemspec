@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec-nc'
   s.add_development_dependency 'rspec-mocks'
   s.add_development_dependency 'resque'
+  s.add_development_dependency 'resque-retry'
   s.add_development_dependency 'resque-scheduler'
   s.add_development_dependency 'activerecord', '~> 5.2'
   s.add_development_dependency 'activesupport', '~> 5.2'

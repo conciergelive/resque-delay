@@ -47,9 +47,24 @@ module ResqueDelay
     def initialize(target, options)
       @target = target
       @options = options
+
+      # If resque-retry has been loaded, we can add custom extensions to allow
+      # automatically retrying jobs.
+      @retryable = defined?(::Resque::Plugins::Retry)
+
       check_class = defined?(::Integer) ? ::Integer : ::Fixnum
       if !@options[:in].nil? && !@options[:in].kind_of?(check_class)
         raise ::ArgumentError.new("Delayed settings must be a #{check_class}! not a #{@options[:in].class.name}")
+      end
+    end
+
+    def delay_proxy_class
+      if @retryable && @options[:retry] == :once
+        DelayProxyRetryOnce
+      elsif @retryable && @options[:retry] == true
+        DelayProxyRetryBackoff
+      else
+        DelayProxy
       end
     end
 
@@ -58,9 +73,9 @@ module ResqueDelay
       run_in = @options[:in] || 0
       performable_method = PerformableMethod.create(@target, method, args, queue, run_in, **kwargs)
       if delay?
-        ::Resque.enqueue_in_with_queue(queue, delay, DelayProxy, performable_method)
+        ::Resque.enqueue_in_with_queue(queue, delay, delay_proxy_class, performable_method)
       else
-        ::Resque::Job.create(queue, DelayProxy, performable_method)
+        ::Resque::Job.create(queue, delay_proxy_class, performable_method)
       end
       performable_method
     end
@@ -98,6 +113,18 @@ module ResqueDelay
 
     def delay
       @delay ||= @options[:in]
+    end
+  end
+
+  if defined?(::Resque::Plugins::Retry)
+    class DelayProxyRetryOnce < DelayProxy
+      extend ::Resque::Plugins::Retry
+    end
+  end
+
+  if defined?(::Resque::Plugins::ExponentialBackoff)
+    class DelayProxyRetryBackoff < DelayProxy
+      extend ::Resque::Plugins::ExponentialBackoff
     end
   end
 end

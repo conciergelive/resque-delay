@@ -1,5 +1,4 @@
 require_relative './spec_helper'
-require 'resque-delay'
 
 describe "resque" do
   context 'delay' do
@@ -83,6 +82,16 @@ describe "resque" do
       expect do
         job = FairyTale.delay(in: 'I will fail').to_s
       end.to raise_error(::ArgumentError)
+    end
+
+    it 'uses one-time retry delay proxy' do
+      expect(::Resque::Job).to receive(:create).with('abbazabba', ResqueDelay::DelayProxyRetryOnce, anything)
+      FairyTale.delay(to: 'abbazabba', retry: :once).to_s
+    end
+
+    it 'uses backoff retry delay proxy' do
+      expect(::Resque::Job).to receive(:create).with('abbazabba', ResqueDelay::DelayProxyRetryBackoff, anything)
+      FairyTale.delay(to: 'abbazabba', retry: true).to_s
     end
   end
 
