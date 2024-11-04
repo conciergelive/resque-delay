@@ -60,11 +60,11 @@ module ResqueDelay
 
     def delay_proxy_class
       if @retryable && @options[:retry] == :once
-        DelayProxyRetryOnce
+        ::ResqueDelay::DelayProxyRetryOnce
       elsif @retryable && @options[:retry] == true
-        DelayProxyRetryBackoff
+        ::ResqueDelay::DelayProxyRetryBackoff
       else
-        DelayProxy
+        ::ResqueDelay::DelayProxy
       end
     end
 
