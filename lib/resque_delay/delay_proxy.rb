@@ -119,12 +119,22 @@ module ResqueDelay
   if defined?(::Resque::Plugins::Retry)
     class DelayProxyRetryOnce < DelayProxy
       extend ::Resque::Plugins::Retry
+
+      def self.retry_queue(...)
+        :retries
+      end
     end
   end
 
   if defined?(::Resque::Plugins::ExponentialBackoff)
     class DelayProxyRetryBackoff < DelayProxy
       extend ::Resque::Plugins::ExponentialBackoff
+
+      @backoff_strategy = [0, 5, 10, 15, 20, 60, 600, 3600, 10800, 21600]
+
+      def self.retry_queue(...)
+        :retries
+      end
     end
   end
 end
