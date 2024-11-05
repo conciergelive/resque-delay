@@ -130,7 +130,23 @@ module ResqueDelay
     class DelayProxyRetryBackoff < DelayProxy
       extend ::Resque::Plugins::ExponentialBackoff
 
-      @backoff_strategy = [0, 5, 10, 15, 20, 60, 600, 3600, 10800, 21600]
+      # Override "exponential" with our own values. Sidekiq does up to 30 days
+      # of retries but that seems a bit excessive. A max of 5 days of retry
+      # delay gives plenty of time to resolve issues that crop up on a weekend.
+      @backoff_strategy = [
+        30, # 30 secs
+        2 * 60, # 2 mins
+        10 * 60, # 10 mins
+        30 * 60, # 30 mins
+        1 * 3600, # 1 hr
+        2 * 3600, # 2 hrs
+        8 * 3600, # 8 hrs
+        24 * 3600, # 1 day
+        2 * 24 * 3600, # 2 days
+        5 * 24 * 3600, # 5 days
+      ]
+      @retry_delay_multiplicand_min = 0.7
+      @retry_delay_multiplicand_max = 1.3
 
       def self.retry_queue(...)
         :retries
