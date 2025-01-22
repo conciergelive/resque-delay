@@ -18,32 +18,6 @@ module ResqueDelay
     end
 
   class DelayProxy < proxy_superclass
-    if defined?(::NewRelic)
-      extend ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
-
-      def self.with_tracing(performable_method)
-        begin
-          perform_action_with_newrelic_trace(
-            :name => nil,
-            :class_name => performable_method.display_name,
-            :category => 'OtherTransaction/ResqueJob') do
-
-            ::NewRelic::Agent::Transaction.merge_untrusted_agent_attributes(
-              performable_method.args,
-              :'job.resque.args',
-              ::NewRelic::Agent::AttributeFilter::DST_NONE)
-
-            yield
-          end
-        ensure
-          # Stopping the event loop before flushing the pipe.
-          # The goal is to avoid conflict during write.
-          ::NewRelic::Agent.agent.stop_event_loop
-          ::NewRelic::Agent.agent.flush_pipe_data
-        end
-      end
-    end
-
     def initialize(target, options)
       @target = target
       @options = options
@@ -82,15 +56,7 @@ module ResqueDelay
 
     # Called asynchronously by Resque
     def self.perform(args)
-      pm = performable_from_resque_args(args)
-
-      if defined?(::NewRelic)
-        with_tracing pm do
-          pm.perform
-        end
-      else
-        pm.perform
-      end
+      performable_from_resque_args(args).perform
     end
 
     def self.performable_from_resque_args(args)

@@ -23,6 +23,13 @@ module ResqueDelay
     end
 
     def perform
+      # Capture the actual name of the class/method that got sent to Resque for
+      # NewRelic reporting. If we don't do this, all transactions for Resque
+      # report ResqueDelay::DelayProxy.
+      if defined?(::NewRelic) && NewRelic::Agent.respond_to?(:set_transaction_name)
+        NewRelic::Agent.set_transaction_name(display_name)
+      end
+
       if kwargs.blank?
         load_from_string(object).send(method, *loaded_args)
       else
